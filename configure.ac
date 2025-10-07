@@ -27,6 +27,11 @@ AC_TYPE_UINT16_T
 AC_FUNC_FORK
 AC_CHECK_FUNCS([strdup strerror])
 
+# check for curl library
+CFLAGS="${CFLAGS} `curl-config --cflags`"
+CXXFLAGS="${CXXFLAGS} `curl-config --cflags`"
+LIBS="${LIBS} `curl-config --libs`"
+
 # check for mysql library settings
 CFLAGS="${CFLAGS} `${MARIADB_CONFIG} --cflags`"
 CXXFLAGS="${CXXFLAGS} `${MARIADB_CONFIG} --cflags`"

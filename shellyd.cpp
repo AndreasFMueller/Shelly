@@ -10,6 +10,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "debug.h"
+#include "loop.h"
 
 namespace shelly {
 
@@ -80,6 +81,10 @@ int	main(int argc, char *const argv[]) {
 		chdir("/");
 		umask(0);
 	}
+
+	// start the main loop
+	loop	l;
+	l.run();
 	
 	return EXIT_SUCCESS;
 }

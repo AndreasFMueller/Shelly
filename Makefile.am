@@ -8,10 +8,13 @@ EXTRA_DIST =
 noinst_LTLIBRARIES = libshelly.la
 
 libshelly_la_SOURCES = 							\
+	loop.cpp							\
 	debug.cpp							\
 	format.cpp
 
 noinst_HEADERS =							\
+	json.hpp							\
+	loop.cpp							\
 	debug.h								\
 	format.h
 
