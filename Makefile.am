@@ -3,7 +3,9 @@
 #
 # (c) 2025 Prof Dr Andreas Müller
 #
-EXTRA_DIST =
+EXTRA_DIST = shellyd.config shelly.service
+
+noinst_DATA = shelly.service
 
 SHELLYCONFFILE = \"@SHELLYCONFFILE@\"
 AM_CPPFLAGS = -DSHELLYCONFFILE=$(SHELLYCONFFILE)

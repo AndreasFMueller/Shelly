@@ -1,0 +1,9 @@
+[Unit]
+Description=Shelly server
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/local/bin/shellyd --syslog --foreground --config=/usr/local/etc/shellyd.config
