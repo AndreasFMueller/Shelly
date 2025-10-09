@@ -102,8 +102,8 @@
     <graph name="Bubental.shelly1" offset="3600"
 	height="144" width="500" bgcolor="#ffffff" fgcolor="#000000">
       <leftlabel align="center">Temperature (deg C)</leftlabel>
-      <leftaxis type="static" min="-15" max="35"
-	first="-10" last="30" step="10" format="%.0f"
+      <leftaxis type="static" min="0" max="30"
+	first="0" last="30" step="10" format="%.0f"
 	ticks="yes" gridlines="yes"/>
       <graphwindow llx="55" lly="19" urx="455" ury="139"/>
       <channels>
@@ -148,8 +148,8 @@
     <graph name="Bubental.shelly2" offset="3600"
 	height="144" width="500" bgcolor="#ffffff" fgcolor="#000000">
       <leftlabel align="center">Temperature (deg C)</leftlabel>
-      <leftaxis type="static" min="-15" max="35"
-	first="-10" last="30" step="10" format="%.0f"
+      <leftaxis type="static" min="0" max="30"
+	first="0" last="30" step="10" format="%.0f"
 	ticks="yes" gridlines="yes"/>
       <graphwindow llx="55" lly="19" urx="455" ury="139"/>
       <channels>
