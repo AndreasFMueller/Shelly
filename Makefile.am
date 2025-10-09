@@ -5,6 +5,9 @@
 #
 EXTRA_DIST =
 
+SHELLYCONFFILE = \"@SHELLYCONFFILE@\"
+AM_CPPFLAGS = -DSHELLYCONFFILE=$(SHELLYCONFFILE)
+
 noinst_LTLIBRARIES = libshelly.la
 
 libshelly_la_SOURCES = 							\
@@ -28,6 +31,8 @@ bin_PROGRAMS = shellyd
 shellyd_SOURCES = shellyd.cpp
 shellyd_DEPENDENCIES = libshelly.la
 shellyd_LDFLAGS = -L. -lshelly
+
+pkgdata_DATA = shellyd.config
 
 test:	shellyd shellyd.config
 	./shellyd --foreground --debug \

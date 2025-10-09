@@ -40,6 +40,7 @@ static struct option	longopts[] = {
 
 int	main(int argc, char *const argv[]) {
 	bool	foreground = false;
+	std::string	configfilename(SHELLYCONFFILE);
 	configuration_ptr	config;
 
 	int	c;
@@ -48,13 +49,9 @@ int	main(int argc, char *const argv[]) {
 		&longindex)))
 		switch (c) {
 		case 'c':
-			{
-				std::string	configfile(optarg);
-				debug(LOG_DEBUG, DEBUG_LOG, 0, "reading config "
-					"file '%s'", configfile.c_str());
-				config = configuration_ptr(
-					new configuration(configfile));
-			}
+			configfilename = std::string(optarg);
+			debug(LOG_DEBUG, DEBUG_LOG, 0, "using config file '%s'",
+				configfilename.c_str());
 			break;
 		case 'd':
 			debuglevel = LOG_DEBUG;
@@ -71,6 +68,9 @@ int	main(int argc, char *const argv[]) {
 			break;
 		}
 	debug(LOG_DEBUG, DEBUG_LOG, 0, "command line parsed");
+
+	// parse the configuration file
+	config = configuration_ptr(new configuration(configfilename));
 
 	// daemonize unless prevented by the --foreground option
 	if (foreground) {

@@ -20,6 +20,8 @@ namespace shelly {
 
 /**
  * \brief construct the loop object
+ *
+ * \param config	the configuration to use in the looop
  */
 loop::loop(configuration_ptr config) : _config(config),
 	// this initialization makes sure the json strings are parseable
@@ -117,7 +119,7 @@ static size_t	read_callback(void *data, size_t size, size_t nitems,
 /**
  * \brief send a request to the cloud
  *
- * \param ids		list of device ids to query
+ * \param idlist		list of device ids to query
  */
 void	loop::sendrequest(const std::list<std::string>& idlist) {
 	// create the request JSON
@@ -206,7 +208,8 @@ void	loop::process(const nlohmann::json& response) {
 
 		// get the data to add
 		nlohmann::json	status = item["status"];
-		debug(LOG_DEBUG, DEBUG_LOG, 0, "status: %s", status.dump(4).c_str());
+		debug(LOG_DEBUG, DEBUG_LOG, 0, "status: %s",
+			status.dump(4).c_str());
 		double	ts = 0;
 		try {
 			ts = status["ts"];

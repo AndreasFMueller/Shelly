@@ -299,11 +299,11 @@ extern "C" void vdebug(int loglevel, const char *file, int line,
 
 	// get prefix
 	if (flags & DEBUG_NOFILELINE) {
-		snprintf(prefix, sizeof(prefix), "%s %s[%d%s]:",
-			tstp, DEBUG_IDENT, getpid(), threadid);
+		snprintf(prefix, sizeof(prefix), "%s %s%s:",
+			tstp, DEBUG_IDENT, threadid);
 	} else {
-		snprintf(prefix, sizeof(prefix), "%s %s[%d%s] %s:%03d:",
-			tstp, DEBUG_IDENT, getpid(), threadid, file, line);
+		snprintf(prefix, sizeof(prefix), "%s %s%s %s:%03d:",
+			tstp, DEBUG_IDENT, threadid, file, line);
 	}
 
 	// split msgbuffer at newlines

@@ -64,6 +64,11 @@ std::string	configuration::stringvalue(const std::string& path) const {
 	return result;
 }
 
+/**
+ * \brief retrieve an integer value from the configuration
+ *
+ * \param path		json path to the value
+ */
 int	configuration::intvalue(const std::string& path) const {
 	std::list<std::string>	pc = splitpath(path);
 	nlohmann::json	d = data;
@@ -87,6 +92,11 @@ std::list<std::string>	configuration::idlist() const {
 	return result;
 }
 
+/**
+ * \brief Retrieve a json structure for a device by id
+ *
+ * \param id	the id of the device
+ */
 nlohmann::json	configuration::device(const std::string& id) const {
 	nlohmann::json	devices = data["devices"];
 	for (auto device : devices) {

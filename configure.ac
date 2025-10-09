@@ -37,6 +37,9 @@ CFLAGS="${CFLAGS} `${MARIADB_CONFIG} --cflags`"
 CXXFLAGS="${CXXFLAGS} `${MARIADB_CONFIG} --cflags`"
 LIBS="${LIBS} `${MARIADB_CONFIG} --libs`"
 
+SHELLYCONFFILE=${sysconfdir}/shellyd.config
+AC_SUBST(SHELLYCONFFILE)
+
 AC_CONFIG_FILES([Makefile])
 
 AC_OUTPUT
