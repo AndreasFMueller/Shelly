@@ -8,13 +8,18 @@ EXTRA_DIST =
 noinst_LTLIBRARIES = libshelly.la
 
 libshelly_la_SOURCES = 							\
+	configuration.cpp						\
 	loop.cpp							\
+	database.cpp							\
 	debug.cpp							\
 	format.cpp
 
 noinst_HEADERS =							\
 	json.hpp							\
-	loop.cpp							\
+	common.h							\
+	configuration.h							\
+	loop.h								\
+	database.h							\
 	debug.h								\
 	format.h
 
@@ -26,5 +31,5 @@ shellyd_LDFLAGS = -L. -lshelly
 
 test:	shellyd shellyd.config
 	./shellyd --foreground --debug \
-		--config=shelly.config 
+		--config=shellyd.config 
 

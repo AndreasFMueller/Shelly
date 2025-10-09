@@ -6,6 +6,8 @@
 #include "loop.h"
 #include "json.hpp"
 #include "debug.h"
+#include "database.h"
+#include "format.h"
 #include <chrono>
 #include <thread>
 #include <iostream>
@@ -19,7 +21,9 @@ namespace shelly {
 /**
  * \brief construct the loop object
  */
-loop::loop() {
+loop::loop(configuration_ptr config) : _config(config),
+	// this initialization makes sure the json strings are parseable
+	request("{}"), response("{}") {
 }
 
 /**
@@ -115,19 +119,20 @@ static size_t	read_callback(void *data, size_t size, size_t nitems,
  *
  * \param ids		list of device ids to query
  */
-bool	loop::sendrequest(const std::list<std::string>& idlist) {
-	nlohmann::json	j;
+void	loop::sendrequest(const std::list<std::string>& idlist) {
+	// create the request JSON
+	nlohmann::json	requestjson;
 	{
 		auto	ids = nlohmann::json::array();
 		for (auto id : idlist) {
 			ids.push_back(id);
 		}
-		j["ids"] = ids;
+		requestjson["ids"] = ids;
 	}
 	{
 		auto	select = nlohmann::json::array();
 		select.push_back("status");
-		j["select"] = select;
+		requestjson["select"] = select;
 	}
 	{
 		auto	pick = nlohmann::json();
@@ -140,17 +145,18 @@ bool	loop::sendrequest(const std::list<std::string>& idlist) {
 		pick["status"] = status;
 		auto	settings = nlohmann::json::array();
 		pick["settings"] = settings;
-		j["pick"] = pick;
+		requestjson["pick"] = pick;
 	}
-	request = j.dump();
-	std::cout << request << std::endl;
-	response = std::string();
+	request = requestjson.dump();
 
-	// build the URL from configuration data (XXX actually do that)
-	std::string	url = "https://shelly-209-eu.shelly.cloud";
-	std::string	endpoint = "/v2/devices/api/get";
-	std::string	key = "MzZlNDQwdWlkF605193D617BE7552074F20C4BAFCBA30B854FB7A3EFFA5FF7036BED3CDFD08640C8AF52D5F0E72A";
+	// build the URL from configuration data
+	std::string	url = _config->stringvalue("cloud.url");
+	std::string	endpoint = _config->stringvalue("cloud.endpoint");
+	std::string	key = _config->stringvalue("cloud.key");
 	std::string	requesturl = url + endpoint + "?auth_key=" + key;
+
+	// empty the response string
+	response = std::string();
 
 	// send the cloud request
 	CURL	*curl;
@@ -173,11 +179,10 @@ bool	loop::sendrequest(const std::list<std::string>& idlist) {
 	// perform the request
 	CURLcode	res = curl_easy_perform(curl);
 	if (res != CURLE_OK) {
-		debug(LOG_ERR, DEBUG_LOG, 0, "curl failed: %s",
+		std::string	e = stringprintf("curl failed: %s",
 			curl_easy_strerror(res));
-		return false;
+		throw std::runtime_error(e);
 	}
-	return true;
 }
 
 /**
@@ -185,11 +190,30 @@ bool	loop::sendrequest(const std::list<std::string>& idlist) {
  *
  * \param response	the response as a JSON object
  */
-bool	loop::process(const nlohmann::json& response) {
+void	loop::process(const nlohmann::json& response) {
+	// to process the item, we need a database
+	database	db(_config);
+
 	for (auto item : response) {
 		std::string	id = item["id"];
+		debug(LOG_DEBUG, DEBUG_LOG, 0, "processing id %s", id.c_str());
+		// get the station and the sensor from the id
+		nlohmann::json	device = _config->device(id);
+		std::string	station = device["station"];
+		std::string	sensor = device["sensor"];
+		debug(LOG_DEBUG, DEBUG_LOG, 0, "processing for %s/%s",
+			station.c_str(), sensor.c_str());
+
+		// get the data to add
 		nlohmann::json	status = item["status"];
-		double	ts = status["ts"];
+		debug(LOG_DEBUG, DEBUG_LOG, 0, "status: %s", status.dump(4).c_str());
+		double	ts = 0;
+		try {
+			ts = status["ts"];
+		} catch (const std::exception& x) {
+			debug(LOG_INFO, DEBUG_LOG, 0, "no timestamp for id %s",
+				id.c_str());
+		}
 		float	temperature = status["temperature:0"]["tC"];
 		float	humidity = status["humidity:0"]["rh"];
 		float	voltage = status["devicepower:0"]["battery"]["V"];
@@ -199,8 +223,36 @@ bool	loop::process(const nlohmann::json& response) {
 			"voltage = %f, percent = %f, last = %f",
 			id.c_str(), temperature, humidity,
 			voltage, percent, ts);
+
+		// get the time key to add
+		try {
+			time_t	t = timekey().count();	
+			db.add(station, sensor, t,
+				temperature, humidity, voltage, percent);
+		} catch (const std::exception& x) {
+			debug(LOG_ERR, DEBUG_LOG, 0, "adding to %s/%s "
+				"(temperatur=%.1f,wHumidity=%.0f, battery=%.2f,"
+				" capacity=%.0f) failed: %s",
+				station.c_str(), sensor.c_str(),
+				temperature, humidity, voltage, percent,
+				x.what());
+		}
 	}
-	return true;
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "all ids processed");
+}
+
+/**
+ * \brief get the time rounded down
+ */
+std::chrono::seconds	loop::timekey() const {
+	std::chrono::system_clock::time_point	start
+		= std::chrono::system_clock::now();
+
+	std::chrono::seconds	d
+		= std::chrono::duration_cast<std::chrono::seconds>(
+		std::chrono::duration_cast<std::chrono::minutes>(
+		start.time_since_epoch()));
+	return d;
 }
 
 /**
@@ -210,17 +262,27 @@ void	loop::run() {
 	debug(LOG_DEBUG, DEBUG_LOG, 0, "start the event loop");
 	while (1) {
 		// send a request
-		std::list<std::string>	ids;
-		ids.push_back("54320457a234");
-		ids.push_back("54320457a250");
-		sendrequest(ids);
+		try {
+			std::list<std::string>	ids = _config->idlist();
+			sendrequest(ids);
+		} catch (const std::exception& x) {
+			debug(LOG_ERR, DEBUG_LOG, 0, "cannot retrieve data: %s",
+				x.what());
+			goto next;
+		}
 
 		// process the response
 		debug(LOG_DEBUG, DEBUG_LOG, 0, "response: %s",
 			response.c_str());
-		nlohmann::json	r = nlohmann::json::parse(response);
-		process(r);
+		try {
+			nlohmann::json	r = nlohmann::json::parse(response);
+			process(r);
+		} catch (const std::exception& x) {
+			debug(LOG_ERR, DEBUG_LOG, 0, "cannot process data: %s",
+				x.what());
+		}
 
+	next:
 		// compute how much time we have to wait for the
 		// next run
 		std::chrono::system_clock::time_point	start

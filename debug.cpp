@@ -42,7 +42,7 @@ static char	*logfilename = NULL;
 static int	debug_destination = DEBUG_STDERR;
 static char	*debug_ident = NULL;
 
-#define	DEBUG_IDENT	((debug_ident) ? debug_ident : "powermeter")
+#define	DEBUG_IDENT	((debug_ident) ? debug_ident : "shellyd")
 
 extern "C" void	debug(int loglevel, const char *file, int line,
 	int flags, const char *format, ...) {

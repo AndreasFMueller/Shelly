@@ -9,20 +9,24 @@
 #include <json.hpp>
 #include <list>
 #include <string>
+#include <chrono>
+#include "configuration.h"
 
 namespace shelly {
 
 class loop {
+	configuration_ptr	_config;
 	std::string	request;
 	std::string	response;
 public:
-	loop();
+	loop(configuration_ptr config);
 	~loop();
 	void	run();
 	size_t	read_callback(char *data, size_t size, size_t nitems);
 	size_t	write_callback(char *data, size_t size, size_t nitems);
-	bool	sendrequest(const std::list<std::string>& ids);
-	bool	process(const nlohmann::json& response);
+	void	sendrequest(const std::list<std::string>& ids);
+	void	process(const nlohmann::json& response);
+	std::chrono::seconds	timekey() const;
 };
 
 } // namespace shelly

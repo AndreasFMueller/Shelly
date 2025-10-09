@@ -38,4 +38,4 @@ std::string stringprintf(const char *format, ...)
 	return result;
 }
 
-} // namespace powermeter
+} // namespace shelly

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include "debug.h"
 #include "loop.h"
+#include "configuration.h"
 
 namespace shelly {
 
@@ -39,6 +40,7 @@ static struct option	longopts[] = {
 
 int	main(int argc, char *const argv[]) {
 	bool	foreground = false;
+	configuration_ptr	config;
 
 	int	c;
 	int	longindex;
@@ -46,6 +48,13 @@ int	main(int argc, char *const argv[]) {
 		&longindex)))
 		switch (c) {
 		case 'c':
+			{
+				std::string	configfile(optarg);
+				debug(LOG_DEBUG, DEBUG_LOG, 0, "reading config "
+					"file '%s'", configfile.c_str());
+				config = configuration_ptr(
+					new configuration(configfile));
+			}
 			break;
 		case 'd':
 			debuglevel = LOG_DEBUG;
@@ -82,8 +91,13 @@ int	main(int argc, char *const argv[]) {
 		umask(0);
 	}
 
+	// TEST access database data
+	std::string	hostname = config->stringvalue("database.hostname");
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "database hostname: %s",
+		hostname.c_str());
+
 	// start the main loop
-	loop	l;
+	loop	l(config);
 	l.run();
 	
 	return EXIT_SUCCESS;
