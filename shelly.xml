@@ -195,8 +195,8 @@
     <graph name="Bubental.battery" offset="3600"
 	height="144" width="500" bgcolor="#ffffff" fgcolor="#000000">
       <leftlabel align="center">Battery voltage (V)</leftlabel>
-      <leftaxis type="static" min="4" max="7"
-	first="4" last="7" step="1" format="%.0f"
+      <leftaxis type="static" min="4.5" max="6.5"
+	first="5" last="6" step="1" format="%.0f"
 	ticks="yes" gridlines="yes"/>
       <graphwindow llx="55" lly="19" urx="455" ury="139"/>
       <channels>
