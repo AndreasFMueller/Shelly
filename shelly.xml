@@ -1,0 +1,217 @@
+<!--
+
+ shelly.xml  **	graph configuration file (fixes colors and scales for the
+		meteo graphs) This version expresses the graphs we were used
+		to in previous release completely in the new XML syntax.
+
+ (c) 2001 Dr. Andreas Mueller, Beratung und Entwicklung
+
+  -->
+<meteo>
+  <!--
+    database configuration
+    
+    each meteo instance has exactly one database, which may hold data
+    for several stations (as in the sample installation, where the
+    database holds data for the stations in Gurin and Altendorf)
+  -->
+  <database>
+    <hostname>ferdinand</hostname>
+    <dbname>meteonew</dbname>
+    <port>3307</port>
+    <user>meteo</user>
+    <password>Public-4711</password>
+    <writer>meteoupdate</writer>
+    <writerpassword>Private-4711</writerpassword>
+    <prefix>meteo</prefix>
+  </database>
+
+  <!--
+    station configuration
+
+    for each station, define the type, the connection method (using url and
+    possibly speed) und the sensors. Use the meteosensors program to find out
+    what sensors your particular station knows about. The sensor configuration
+    here only affects what meteopoll will read and store in the database.
+    You are still free to add other data manually and use the meteodraw program
+    to draw graphs of this data.
+
+    Fully qualified field names are formed by the name attributes of the
+    station and sensor tags and the contents of the field tags. The Altendorf
+    station below has the following fully qualified fields:
+	Bubental.shelly1.temperature
+	Bubental.shelly1.humidity
+	Bubental.shelly1.battery
+	Bubental.shelly1.capacity
+	Bubental.shelly2.temperature
+	Bubental.shelly2.humidity
+	Bubental.shelly2.battery
+	Bubental.shelly2.capacity
+  -->
+  <station name="Bubental">
+    <sensors>
+      <!-- each sensor name must appear in the sensor table in the db-->
+      <sensor name="shelly1">
+        <!-- each field name must appear in the mfield table in the db -->
+        <field>temperature</field>
+        <field>humidity</field>
+      </sensor>
+      <sensor name="shelly2">
+        <field>temperature</field>
+        <field>humidity</field>
+      </sensor>
+    </sensors>
+    <averages>
+      <sensor name="shelly1">
+	<average name="temperature" base="temperature" operator="avg"/>
+	<average name="temperature_min" base="temperature" operator="min"/>
+	<average name="temperature_max" base="temperature" operator="max"/>
+	<average name="humidity" base="humidity" operator="avg"/>
+	<average name="humidity_min" base="humidity" operator="min"/>
+	<average name="humidity_max" base="humidity" operator="max"/>
+	<average name="battery" base="battery" operator="avg"/>
+	<average name="capacity" base="capacity" operator="avg"/>
+      </sensor>
+      <sensor name="shelly2">
+	<average name="temperature" base="temperature" operator="avg"/>
+	<average name="temperature_min" base="temperature" operator="min"/>
+	<average name="temperature_max" base="temperature" operator="max"/>
+	<average name="humidity" base="humidity" operator="avg"/>
+	<average name="humidity_min" base="humidity" operator="min"/>
+	<average name="humidity_max" base="humidity" operator="max"/>
+	<average name="battery" base="battery" operator="avg"/>
+	<average name="capacity" base="capacity" operator="avg"/>
+      </sensor>
+    </averages>
+    <sun method="compute"/>
+  </station>
+
+  <!--
+    Graph configurations
+
+    Each graph has a name by which it can be referenced. The meteodraw program
+    uses the name look up the XML specification of the graph. The name will
+    be used to form the file name for the produced graph (together with the
+    time label), so it should be a legal part of a filename, in particular it
+    should not contain /, and shell metacharacters will cause file names
+    that are clumsy to handle in shell scripts.
+  -->
+  <graphs lockfile="/var/www/html/shelly/lockfile" running="3" queued="10">
+
+    <!-- shelly1 Temperature graph -->
+    <graph name="Bubental.shelly1" offset="3600"
+	height="144" width="500" bgcolor="#ffffff" fgcolor="#000000">
+      <leftlabel align="center">Temperature (deg C)</leftlabel>
+      <leftaxis type="static" min="-15" max="35"
+	first="-10" last="30" step="10" format="%.0f"
+	ticks="yes" gridlines="yes"/>
+      <graphwindow llx="55" lly="19" urx="455" ury="139"/>
+      <channels>
+	<query>
+	  <select name="t">Bubental.shelly1.temperature</select>
+	  <select name="tmin">Bubental.shelly1.temperature_min</select>
+	  <select name="tmax">Bubental.shelly1.temperature_max</select>
+	  <select name="h">Bubental.shelly1.humidity</select>
+	  <select name="hmin">Bubental.shelly1.humidity_min</select>
+	  <select name="hmax">Bubental.shelly1.humidity_max</select>
+	  <data name="dewpoint">
+	    <function2 name="dewpoint">
+	      <value name="h"/>
+	      <value name="t"/>
+	    </function2>
+	  </data>
+	  <data name="dewpointmax">
+	    <function2 name="dewpoint">
+	      <value name="hmax"/>
+	      <value name="tmax"/>
+	    </function2>
+	  </data>
+	  <data name="dewpointmin">
+	    <function2 name="dewpoint">
+	      <value name="hmin"/>
+	      <value name="tmin"/>
+	    </function2>
+	  </data>
+	</query>
+	<channel color="#d2d2ff" type="range" scale="left"
+	  nameupper="dewpointmax" namelower="dewpointmin"/>
+	<channel color="#6464ff" type="curve" scale="left" name="dewpoint"/>
+	<channel color="#ffb4b4" type="range" scale="left"
+	  nameupper="tmax" namelower="tmin"/>
+	<channel color="#b40000" type="curve" scale="left" name="t"/>
+	<channel color="#e6e6e6" type="nodata" name="t"/>
+	<channel color="#ff0000" type="sun" station="Bubental"/>
+      </channels>
+    </graph>
+
+    <!-- shelly2 Temperature graph -->
+    <graph name="Bubental.shelly2" offset="3600"
+	height="144" width="500" bgcolor="#ffffff" fgcolor="#000000">
+      <leftlabel align="center">Temperature (deg C)</leftlabel>
+      <leftaxis type="static" min="-15" max="35"
+	first="-10" last="30" step="10" format="%.0f"
+	ticks="yes" gridlines="yes"/>
+      <graphwindow llx="55" lly="19" urx="455" ury="139"/>
+      <channels>
+	<query>
+	  <select name="t">Bubental.shelly2.temperature</select>
+	  <select name="tmin">Bubental.shelly2.temperature_min</select>
+	  <select name="tmax">Bubental.shelly2.temperature_max</select>
+	  <select name="h">Bubental.shelly2.humidity</select>
+	  <select name="hmin">Bubental.shelly2.humidity_min</select>
+	  <select name="hmax">Bubental.shelly2.humidity_max</select>
+	  <data name="dewpoint">
+	    <function2 name="dewpoint">
+	      <value name="h"/>
+	      <value name="t"/>
+	    </function2>
+	  </data>
+	  <data name="dewpointmax">
+	    <function2 name="dewpoint">
+	      <value name="hmax"/>
+	      <value name="tmax"/>
+	    </function2>
+	  </data>
+	  <data name="dewpointmin">
+	    <function2 name="dewpoint">
+	      <value name="hmin"/>
+	      <value name="tmin"/>
+	    </function2>
+	  </data>
+	</query>
+	<channel color="#d2d2ff" type="range" scale="left"
+	  nameupper="dewpointmax" namelower="dewpointmin"/>
+	<channel color="#6464ff" type="curve" scale="left" name="dewpoint"/>
+	<channel color="#ffb4b4" type="range" scale="left"
+	  nameupper="tmax" namelower="tmin"/>
+	<channel color="#b40000" type="curve" scale="left" name="t"/>
+	<channel color="#e6e6e6" type="nodata" name="t"/>
+	<channel color="#ff0000" type="sun" station="Bubental"/>
+      </channels>
+    </graph>
+
+
+    <!-- battery graph -->
+    <graph name="Bubental.battery" offset="3600"
+	height="144" width="500" bgcolor="#ffffff" fgcolor="#000000">
+      <leftlabel align="center">Battery voltage (V)</leftlabel>
+      <leftaxis type="static" min="4" max="7"
+	first="4" last="7" step="1" format="%.0f"
+	ticks="yes" gridlines="yes"/>
+      <graphwindow llx="55" lly="19" urx="455" ury="139"/>
+      <channels>
+	<query>
+	  <select name="b1">Bubental.shelly1.battery</select>
+	  <select name="b2">Bubental.shelly2.battery</select>
+	  <select name="c1">Bubental.shelly1.capacity</select>
+	  <select name="c2">Bubental.shelly2.capacity</select>
+	</query>
+	<channel color="#993366" type="curve" scale="left" name="b1"/>
+	<channel color="#339966" type="curve" scale="left" name="b2"/>
+	<channel color="#e6e6e6" type="nodata" name="b1"/>
+      </channels>
+    </graph>
+
+  </graphs>
+
+</meteo>

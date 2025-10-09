@@ -3,7 +3,7 @@
 #
 # (c) 2025 Prof Dr Andreas Müller
 #
-EXTRA_DIST = shellyd.config shelly.service
+EXTRA_DIST = shellyd.config shelly.service shelly.xml
 
 noinst_DATA = shelly.service
 
@@ -34,7 +34,7 @@ shellyd_SOURCES = shellyd.cpp
 shellyd_DEPENDENCIES = libshelly.la
 shellyd_LDFLAGS = -L. -lshelly
 
-pkgdata_DATA = shellyd.config
+pkgdata_DATA = shellyd.config shelly.xml
 
 test:	shellyd shellyd.config
 	./shellyd --foreground --debug \
