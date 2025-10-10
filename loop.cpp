@@ -163,6 +163,9 @@ void	loop::sendrequest(const std::list<std::string>& idlist) {
 	// send the cloud request
 	CURL	*curl;
 	curl = curl_easy_init();
+	if (debuglevel >= LOG_DEBUG) {
+		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
+	}
 	curl_easy_setopt(curl, CURLOPT_URL, requesturl.c_str());
 	curl_easy_setopt(curl, CURLOPT_POST, 1);
 	struct curl_slist	*list = NULL;
@@ -185,6 +188,9 @@ void	loop::sendrequest(const std::list<std::string>& idlist) {
 			curl_easy_strerror(res));
 		throw std::runtime_error(e);
 	}
+
+	// cleanup
+	curl_easy_cleanup(curl);
 }
 
 /**
