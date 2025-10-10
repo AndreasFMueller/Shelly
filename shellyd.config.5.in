@@ -31,9 +31,11 @@ Example configuration:
 
 .in +5
 "cloud": {
-    "url": "https://shelly-209-eu.shelly.cloud",
-    "endpoint": "/v2/devices/api/get",
-    "key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+.in +3
+ "url": "https://shelly-209-eu.shelly.cloud",
+ "endpoint": "/v2/devices/api/get",
+ "key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+.in -3
 }
 .in -5
 
@@ -44,11 +46,13 @@ key of the JSON gives the parameters to connect to the database:
 
 .in +5
 "database": {
-    "hostname": "ferdinand.othello.ch",
-    "port": 3307,
-    "dbname": "meteonew",
-    "username": "meteoupdate",
-    "password": "XXXX"
+.in +3
+ "hostname": "ferdinand.othello.ch",
+ "port": 3307,
+ "dbname": "meteonew",
+ "username": "meteoupdate",
+ "password": "XXXX"
+.in -3
 },
 .in -5
 
@@ -70,18 +74,24 @@ and
 .I sensor
 are used in the meteo database, as in the following example:
 
-.in 5
+.in +5
 "devices": [
-    {
-        "id": "54320457a234",
-        "station": "Bubental",
-        "sensor": "shelly1"
-    },
-    {
-        "id": "54320457a250",
-        "station": "Bubental",
-        "sensor": "shelly2"
-    }
+.in +4
+ {
+.in +3
+ "id": "54320457a234",
+ "station": "Bubental",
+ "sensor": "shelly1"
+.in -3
+ },
+ {
+.in +3
+ "id": "54320457a250",
+ "station": "Bubental",
+ "sensor": "shelly2"
+.in -3
+ }
+.in -4
 ]
 .in -5
 
