@@ -3,7 +3,8 @@
 #
 # (c) 2025 Prof Dr Andreas Müller
 #
-EXTRA_DIST = shellyd.config shelly.service shelly.xml
+EXTRA_DIST = shellyd.config shelly.service shelly.xml shellyd.8.in \
+	shellyd.config.5.in
 
 noinst_DATA = shelly.service
 
@@ -33,6 +34,8 @@ bin_PROGRAMS = shellyd
 shellyd_SOURCES = shellyd.cpp
 shellyd_DEPENDENCIES = libshelly.la
 shellyd_LDFLAGS = -L. -lshelly
+
+man_MANS = shellyd.8 shellyd.config.5
 
 pkgdata_DATA = shellyd.config shelly.xml
 

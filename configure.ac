@@ -40,7 +40,7 @@ LIBS="${LIBS} `${MARIADB_CONFIG} --libs`"
 SHELLYCONFFILE=${sysconfdir}/shellyd.config
 AC_SUBST(SHELLYCONFFILE)
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile shellyd.8 shellyd.config.5])
 
 AC_OUTPUT
 

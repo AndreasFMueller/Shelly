@@ -1,0 +1,99 @@
+.TH SHELLYD.CONFIG 5 "Octobe 2025" "Shelly to meteo gateway" Othello
+.SH NAME
+shellyd.config
+
+.SH DESCRIPTION
+The shelly daemon
+.BR shellyd (8)
+operates as a gateway betwenn the shelly cloud and the
+.BR meteo (1)
+database.
+The
+.I shellyd.config
+configuration file uses the JSON format to define database,
+cloud and device mapping information to the the 
+.BR shellyd (8).
+
+.SH SHELLY CLOUD CONFIGURATION
+The 
+.I cloud
+key provides cloud api access information.
+It must contain 
+.IR url ,
+.I endpoint
+and
+.I key
+keys.
+The key contains the access key that can be created on the shelly
+website.
+
+Example configuration:
+
+.in +5
+"cloud": {
+    "url": "https://shelly-209-eu.shelly.cloud",
+    "endpoint": "/v2/devices/api/get",
+    "key": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+}
+.in -5
+
+.SH DATABASE CONFIGURATION
+The
+.I database
+key of the JSON gives the parameters to connect to the database:
+
+.in +5
+"database": {
+    "hostname": "ferdinand.othello.ch",
+    "port": 3307,
+    "dbname": "meteonew",
+    "username": "meteoupdate",
+    "password": "XXXX"
+},
+.in -5
+
+.SH DEVICE MAPPING
+The 
+.I devices
+key gives an array of devices, each of which contains the
+.IR id ,
+.I station
+and
+.I sensor
+keys.
+The
+.I id
+identifies the device in the shelly cloud, and
+the 
+.I station
+and
+.I sensor
+are used in the meteo database, as in the following example:
+
+.in 5
+"devices": [
+    {
+        "id": "54320457a234",
+        "station": "Bubental",
+        "sensor": "shelly1"
+    },
+    {
+        "id": "54320457a250",
+        "station": "Bubental",
+        "sensor": "shelly2"
+    }
+]
+.in -5
+
+.SH FILES
+.I @SHELLYCONFFILE@
+is described in the
+.BR shellyd.config (5),
+.IR shelly.xml ,
+manual page.
+
+.SH "SEE ALSO"
+.BR shellyd (8)
+.SH AUTHOR
+Prof Dr Andreas Mueller <afm@othello.ch>
+

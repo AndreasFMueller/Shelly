@@ -1,0 +1,172 @@
+.TH SHELLYD 8 "Octobe 2025" "Shelly to meteo gateway" Othello
+.SH NAME
+shellyd \- daemon to write data from the shelly cloud into the meteo database
+.SH SYNOPSIS
+shellyd [
+.B \-d
+] [
+.B \-h 
+] [
+.B \-f
+] [
+.B \-s
+] [
+.BI \-c\  configfile
+]
+.SH DESCRIPTION
+The Shelly cloud makes data measured by Shelly devices available to
+applications. However, the time resolution is quite limited and the graphs
+available in common apps are somewhat crude. The 
+.BR shellyd (8)
+daemon polls the cloud at 1 minute intervals and stores the results
+in a meteo database. The 
+.BR meteoavg (1)
+daemon can then consolidate the data and the
+.BR meteograph (1)
+program can plot it.
+
+.SH SENSORS SUPPORTED
+Currently, only Shelly Humidity/Temperature sensors HTG3 are supported.
+The program reads temperature, humidity, battery voltage and battery
+capacity from the cloud and stores them in fields named according
+to the following table into the database:
+
+.TS
+tab(&);
+l l.
+Shelly field                  &meteo field  &mfield id
+
+temperature:0.tC              &temperature  &0
+humidity:0.rh                 &humidity     &10
+devicepower:0.battery.V       &battery      &110
+devicepower:0.battery.percent &capacity     &109
+.TE
+
+.SH "METEO DATABASE CONFIGURATION"
+The 
+.BR meteo (1)
+needs to include configuration data for the sensors.
+See the
+.BR shellyd.config (5)
+manual page for details on how the daemon is configured for a particular
+device.
+There needs to be a station configured containing location data.
+The following three stations are configured to 
+
+.TS
+tab(&);
+l r l r r r r.
+name    & id & timezone & offset & longitude & latitude  & altitude
+
+Bubental&  5 & MET      &   3600 &     47.18 &      8.81 &      610
+Bosco   &  6 & MET      &   3600 &      46.3 &       8.5 &     1504
+Yachiyo &  7 & JST      &  32400 &     35.72 &     140.1 &       30
+.TE
+
+The 
+.I sensor
+table needs to contain an entry for each Shelly device.
+The following table specifies two Shelly devices attached as sensors
+to the
+.I Bubental
+station and one each attached to the
+.I Bosco
+and
+.I Yachiyo
+stations.
+
+.TS
+tab(&);
+l r r.
+name    & id & stationid
+
+shelly1 & 11 &         5
+shelly2 & 12 &         5
+shelly3 & 13 &         6
+shelly4 & 14 &         7
+.TE
+
+The Shelly device shelly2 is then referenced in the meteo database
+by the station
+.I Bubental
+and as the sensor
+.IR shelly2 .
+When processing data for the
+.I shelly2
+device, it will look up the station
+.I Bubental 
+and the sensor
+.I shelly2
+and it will find the sensor id 12 and station id 5.
+It will then write the data with the given sensor id and the
+mfield id according to the first table above into the 
+.I sdata
+table of the meteo database.
+
+.SH METEO AVERAGING CONFIGURATION
+For the 
+.BR meteoavg (1)
+daemon to be able to average the data for shorter intervals, the following
+meteo configuration, that is also contained in the
+
+.in +0
+<sensor name="shelly1">
+.in +2
+  <average name="temperature" base="temperature" operator="avg"/>
+  <average name="temperature_min" base="temperature" operator="min"/>
+  <average name="temperature_max" base="temperature" operator="max"/>
+  <average name="humidity" base="humidity" operator="avg"/>
+  <average name="humidity_min" base="humidity" operator="min"/>
+  <average name="humidity_max" base="humidity" operator="max"/>
+  <average name="battery" base="battery" operator="avg"/>
+  <average name="capacity" base="capacity" operator="avg"/>
+.in -2
+</sensor>
+.in -0
+
+The distribution contains a sample file
+.IR shelly.xml ,
+containing this configuration.
+
+.SH OPTIONS
+THe daemon understands the following command line options.
+.TP
+.BI \-c\ configfile ,\  \-\-config= configfile
+The configuration file
+.I configfile
+is a JSON formatted file containing database
+connection information, cloud parameters and for each device the
+mapping from the shelly cloud id to the meteo station and sensor name.
+The format is described in the
+.BR shellyd.config (5)
+manual page.
+A sample configuration file named
+.I shellyd.config
+is provided in the package.
+.TP
+.BR \-f , \-\-foreground
+Run the daemon in the foreground.
+This is useful when running the daemon from 
+.BR systemd (8) .
+.TP
+.BR \-h , \-? , \-\-help
+Display a help message and exit.
+.TP
+.BR \-d , \-\-debug
+Show extensive debugging messages while running.
+.TP
+.BR \-s , \-\-syslog
+Use syslog to send messages.
+.SH FILES
+.I @SHELLYCONFFILE@
+is described in the
+.BR shellyd.config (5),
+.IR shelly.xml ,
+manual page.
+.SH "SEE ALSO"
+.BR shellyd.config (5),
+.BR meteoavg (1),
+.BR meteograph (1)
+.SH AUTHOR
+Prof Dr Andreas Mueller <afm@othello.ch>
+
