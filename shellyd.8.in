@@ -11,6 +11,8 @@ shellyd [
 ] [
 .B \-s
 ] [
+.B \-n
+] [
 .BI \-c\  configfile
 ]
 .SH DESCRIPTION
@@ -157,6 +159,9 @@ Show extensive debugging messages while running.
 .TP
 .BR \-s , \-\-syslog
 Use syslog to send messages.
+.TP
+.BR \-n, \-\-dryrun
+Run all the code but do not update the database.
 .SH FILES
 .I @SHELLYCONFFILE@
 is described in the

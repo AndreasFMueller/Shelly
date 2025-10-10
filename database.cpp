@@ -42,8 +42,6 @@ int	database::sensorid(const std::string& station,
 		"where a.id = b.stationid"
 		"  and a.name = ? "
 		"  and b.name = ? ");
-	debug(LOG_DEBUG, DEBUG_LOG, 0, "query to retrieve station id: '%s'",
-		query.c_str());
 
 	if (mysql_stmt_prepare(stmt, query.c_str(), query.size())) {
 		error = stringprintf( "cannot preparte query "
@@ -120,7 +118,8 @@ int	database::sensorid(const std::string& station,
 
 	// retrieve the result id from the row, use it as return value
 	rc = resultid;
-	debug(LOG_DEBUG, DEBUG_LOG, 0, "sensor id is %d", resultid);
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "sensor id for %s/%s is %d",
+		station.c_str(), sensor.c_str(), resultid);
 
 cleanup:
 	mysql_stmt_close(stmt);
@@ -142,6 +141,9 @@ int	database::fieldid(const std::string& fieldname) {
 	int	resultid = -1;
 	std::string	error;
 
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "retrieve id for field %s",
+		fieldname.c_str());
+
 	MYSQL_STMT	*stmt = mysql_stmt_init(mysql);
 	if (NULL == stmt) {
 		error = stringprintf( "cannot create statement: %s",
@@ -152,8 +154,6 @@ int	database::fieldid(const std::string& fieldname) {
 
 	// parse/prepare the query
 	std::string	query("select a.id from mfield a where a.name = ?");
-	debug(LOG_DEBUG, DEBUG_LOG, 0, "query to retrieve field name: '%s'",
-		query.c_str());
 
 	if (mysql_stmt_prepare(stmt, query.c_str(), query.size())) {
 		error = stringprintf("cannot preparte query '%s': %s",
@@ -223,7 +223,8 @@ int	database::fieldid(const std::string& fieldname) {
 	}
 
 	rc = resultid;
-	debug(LOG_DEBUG, DEBUG_LOG, 0, "field id is %d", resultid);
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "field id for %s is %d",
+		fieldname.c_str(), resultid);
 
 cleanup:
 	mysql_stmt_close(stmt);
@@ -292,14 +293,17 @@ void	database::add(const std::string& station, const std::string& sensor,
 		time_t timekey,
 		float temperature, float humidity, float battery,
 		float capacity) {
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "adding data for %s/%s",
+		station.c_str(), sensor.c_str());
 	std::string	error;
 	MYSQL_STMT	*stmt;
 
+	// retrieve the sensor id for this station/sensor combination
 	int	sid = sensorid(station, sensor);
 	debug(LOG_DEBUG, DEBUG_LOG, 0, "found sensor id %s/%s -> %d",
 		station.c_str(), sensor.c_str(), sid);
 
-	// prepare the statement
+	// prepare the insert statement
 	if (NULL == (stmt = mysql_stmt_init(mysql))) {
 		error = stringprintf("cannot create a statement: %s",
 			mysql_error(mysql));
@@ -349,14 +353,16 @@ void	database::add(const std::string& station, const std::string& sensor,
 		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
 		goto cleanup;
 	}
-
-	// exectute the query
-	if (mysql_stmt_execute(stmt)) {
-		error = stringprintf("cannot add temperature: %s",
-			mysql_stmt_error(stmt));
-		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
-		goto cleanup;
-	}
+	if (dryrun) 
+		debug(LOG_DEBUG, DEBUG_LOG, 0,
+			"dryrun: not adding temperature %.1f", temperature);
+	else
+		if (mysql_stmt_execute(stmt)) {
+			error = stringprintf("cannot add temperature: %s",
+				mysql_stmt_error(stmt));
+			debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
+			goto cleanup;
+		}
 
 	// bind timekey, sid, humidity_id, humidity
 	bind[2].buffer = &humidity_id;
@@ -367,12 +373,16 @@ void	database::add(const std::string& station, const std::string& sensor,
 		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
 		goto cleanup;
 	}
-	if (mysql_stmt_execute(stmt)) {
-		error = stringprintf("cannot add temperature: %s",
-			mysql_stmt_error(stmt));
-		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
-		goto cleanup;
-	}
+	if (dryrun) 
+		debug(LOG_DEBUG, DEBUG_LOG, 0,
+			"dryrun: not adding humidity %.1f", humidity);
+	else
+		if (mysql_stmt_execute(stmt)) {
+			error = stringprintf("cannot add temperature: %s",
+				mysql_stmt_error(stmt));
+			debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
+			goto cleanup;
+		}
 
 	// bind timekey, sid, battery_id, battery
 	bind[2].buffer = &battery_id;
@@ -383,12 +393,16 @@ void	database::add(const std::string& station, const std::string& sensor,
 		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
 		goto cleanup;
 	}
-	if (mysql_stmt_execute(stmt)) {
-		error = stringprintf("cannot add battery: %s",
-			mysql_stmt_error(stmt));
-		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
-		goto cleanup;
-	}
+	if (dryrun) 
+		debug(LOG_DEBUG, DEBUG_LOG, 0,
+			"dryrun: not adding battery %.2f", battery);
+	else
+		if (mysql_stmt_execute(stmt)) {
+			error = stringprintf("cannot add battery: %s",
+				mysql_stmt_error(stmt));
+			debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
+			goto cleanup;
+		}
 
 	// bind timekey, sid, capacity_id, capacity
 	bind[2].buffer = &capacity_id;
@@ -399,12 +413,18 @@ void	database::add(const std::string& station, const std::string& sensor,
 		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
 		goto cleanup;
 	}
-	if (mysql_stmt_execute(stmt)) {
-		error = stringprintf("cannot add capacity: %s",
-			mysql_stmt_error(stmt));
-		debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
-		goto cleanup;
-	}
+	if (dryrun) 
+		debug(LOG_DEBUG, DEBUG_LOG, 0,
+			"dryrun: not adding capacity %.0f", capacity);
+	else
+		if (mysql_stmt_execute(stmt)) {
+			error = stringprintf("cannot add capacity: %s",
+				mysql_stmt_error(stmt));
+			debug(LOG_ERR, DEBUG_LOG, 0, "%s", error.c_str());
+			goto cleanup;
+		}
+
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "data added");
 
 	// close the statement
 cleanup:

@@ -29,7 +29,6 @@ configuration::configuration(const std::string& filename) {
  * \param path		the path to split at periods
  */
 std::list<std::string>	configuration::splitpath(const std::string& path) {
-	debug(LOG_DEBUG, DEBUG_LOG, 0, "splitting path '%s'", path.c_str());
 	std::string	p = path;
 	std::list<std::string>	result;
 	size_t	i;
@@ -73,10 +72,11 @@ int	configuration::intvalue(const std::string& path) const {
 	std::list<std::string>	pc = splitpath(path);
 	nlohmann::json	d = data;
 	while (pc.size() > 1) {
-		d = d[*pc.begin()];
+		std::string	c = pc.front();
+		d = d[c];
 		pc.pop_front();
 	}
-	int	result = d[*pc.begin()];
+	int	result = d[pc.front()];
 	return result;
 }
 
@@ -104,6 +104,24 @@ nlohmann::json	configuration::device(const std::string& id) const {
 			return device;
 	}
 	throw shellyexception("device not found");
+}
+
+/**
+ * \brief Find out whether a path is present
+ *
+ * \param path		the path to check
+ */
+bool	configuration::has(const std::string& path) const {
+	std::list<std::string>	pc = splitpath(path);
+	nlohmann::json	d = data;
+	while (pc.size() > 0) {
+		std::string	key = pc.front();
+		if (!d.contains(key))
+			return false;
+		d = d[key];
+		pc.pop_front();
+	}
+	return true;
 }
 
 } // namespace shelly

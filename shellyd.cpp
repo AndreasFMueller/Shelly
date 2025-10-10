@@ -11,10 +11,16 @@
 #include <unistd.h>
 #include "debug.h"
 #include "loop.h"
+#include "common.h"
 #include "configuration.h"
 
 namespace shelly {
 
+/**
+ * \brief display a short usage message
+ *
+ * \param progname	the programm name to use
+ */
 void	usage(char *progname) {
 	std::cout << progname << " [ options ]" << std::endl;
 	std::cout << std::endl;
@@ -27,6 +33,10 @@ void	usage(char *progname) {
 	std::cout << " -c,--config=<c>     read configuration from file <c>"
 		<< std::endl;
 	std::cout << " -f,--foreground     run in the foreground" << std::endl;
+	std::cout << " -n,--dryrun         don't update the database"
+		<< std::endl;
+	std::cout << " -s,--syslog         send log messages to syslog"
+		<< std::endl;
 }
 
 static struct option	longopts[] = {
@@ -34,10 +44,17 @@ static struct option	longopts[] = {
 { "debug",		no_argument,		NULL,		'd' },
 { "syslog",		no_argument,		NULL,		's' },
 { "help",		no_argument,		NULL,		'h' },
+{ "dryrun",		no_argument,		NULL,		'n' },
 { "foreground",		no_argument,		NULL,		'f' },
 { NULL,			0,			NULL,		 0  }
 };
 
+/**
+ * \brief The shellyd main function
+ *
+ * \param argc		the number of command line parameters
+ * \param argv		array of command line parameters
+ */
 int	main(int argc, char *const argv[]) {
 	bool	foreground = false;
 	std::string	configfilename(SHELLYCONFFILE);
@@ -45,7 +62,7 @@ int	main(int argc, char *const argv[]) {
 
 	int	c;
 	int	longindex;
-	while (EOF != (c = getopt_long(argc, argv, "c:d?hfs", longopts,
+	while (EOF != (c = getopt_long(argc, argv, "c:d?hfsn", longopts,
 		&longindex)))
 		switch (c) {
 		case 'c':
@@ -65,6 +82,9 @@ int	main(int argc, char *const argv[]) {
 			break;
 		case 's':
 			debug_syslog(LOG_LOCAL0);
+			break;
+		case 'n':
+			dryrun = true;
 			break;
 		}
 	debug(LOG_DEBUG, DEBUG_LOG, 0, "command line parsed");

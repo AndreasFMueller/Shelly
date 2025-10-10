@@ -12,4 +12,6 @@ public:
 	shellyexception(const std::string& w) : std::runtime_error(w) { }
 };
 
+extern bool	dryrun;
+
 } // namespace shelly

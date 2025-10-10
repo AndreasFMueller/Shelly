@@ -22,6 +22,7 @@ public:
 	int	intvalue(const std::string& path) const;
 	std::list<std::string>	idlist() const;
 	nlohmann::json	device(const std::string& id) const;
+	bool	has(const std::string& path) const;
 };
 
 typedef std::shared_ptr<configuration>	configuration_ptr;

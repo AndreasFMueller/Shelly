@@ -14,6 +14,7 @@ AM_CPPFLAGS = -DSHELLYCONFFILE=$(SHELLYCONFFILE)
 noinst_LTLIBRARIES = libshelly.la
 
 libshelly_la_SOURCES = 							\
+	common.cpp							\
 	configuration.cpp						\
 	loop.cpp							\
 	database.cpp							\

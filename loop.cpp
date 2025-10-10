@@ -78,7 +78,6 @@ size_t	loop::write_callback(char *data, size_t size, size_t nitems) {
 		data);
 	std::string	newdata(data, size * nitems);
 	response = response.append(newdata);
-	debug(LOG_DEBUG, DEBUG_LOG, 0, "response now '%s'", response.c_str());
 	return size * nitems;
 }
 
@@ -156,6 +155,10 @@ void	loop::sendrequest(const std::list<std::string>& idlist) {
 	std::string	endpoint = _config->stringvalue("cloud.endpoint");
 	std::string	key = _config->stringvalue("cloud.key");
 	std::string	requesturl = url + endpoint + "?auth_key=" + key;
+	int	timeout = 10;
+	if (_config->has("cloud.timeout")) {
+		timeout = _config->intvalue("cloud.timeout");
+	}
 
 	// empty the response string
 	response = std::string();
@@ -179,7 +182,10 @@ void	loop::sendrequest(const std::list<std::string>& idlist) {
 		shelly::write_callback);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*)this);
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, "shellyd-agent");
-	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10);
+	if (timeout > 0) {
+		debug(LOG_DEBUG, DEBUG_LOG, 0, "using timeout %d", timeout);
+		curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
+	}
 
 	// perform the request
 	CURLcode	res = curl_easy_perform(curl);
@@ -199,6 +205,8 @@ void	loop::sendrequest(const std::list<std::string>& idlist) {
  * \param response	the response as a JSON object
  */
 void	loop::process(const nlohmann::json& response) {
+	debug(LOG_DEBUG, DEBUG_LOG, 0, "processing response %s",
+		response.dump(4).c_str());
 	// to process the item, we need a database
 	database	db(_config);
 
@@ -227,9 +235,9 @@ void	loop::process(const nlohmann::json& response) {
 		float	humidity = status["humidity:0"]["rh"];
 		float	voltage = status["devicepower:0"]["battery"]["V"];
 		float	percent = status["devicepower:0"]["battery"]["percent"];
-		debug(LOG_DEBUG, DEBUG_LOG, 0,
-			"id = %s, temperature = %f, humidty = %f, "
-			"voltage = %f, percent = %f, last = %f",
+		debug(LOG_DEBUG, DEBUG_LOG, 0, "device data found: "
+			"id = %s, temperature = %.1f, humidty = %.0f, "
+			"voltage = %.2f, percent = %.0f, last = %.2f",
 			id.c_str(), temperature, humidity,
 			voltage, percent, ts);
 
@@ -281,8 +289,6 @@ void	loop::run() {
 		}
 
 		// process the response
-		debug(LOG_DEBUG, DEBUG_LOG, 0, "response: %s",
-			response.c_str());
 		try {
 			nlohmann::json	r = nlohmann::json::parse(response);
 			process(r);
